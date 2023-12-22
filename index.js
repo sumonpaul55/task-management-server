@@ -6,7 +6,7 @@ require('dotenv').config();
 const port = process.env.PORT || 5000;
 app.use(cors({
     // firebase link
-    origin: ["http://localhost:5173"],
+    origin: [`https://task-managemet.web.app`],
     credentials: true
 }))
 app.use(express.json())
