@@ -6,7 +6,7 @@ require('dotenv').config();
 const port = process.env.PORT || 5000;
 app.use(cors({
     // firebase link
-    origin: ["http://localhost:5000"],
+    origin: ["http://localhost:5173"],
     credentials: true
 }))
 app.use(express.json())
@@ -30,12 +30,83 @@ async function run() {
         // await client.connect();
         // Send a ping to confirm a successful connection
         const usersCollections = client.db("taskManagement").collection("users")
+        const todosCollections = client.db("taskManagement").collection("allTodos")
+        // getting all users
+        app.get("/allusers", async (req, res) => {
+            const result = (await usersCollections.find().toArray()).reverse();
+            res.send(result)
+        })
+        // getting mytodos api
+        app.get("/myTodos", async (req, res) => {
+            try {
+                const email = req.query.email
+                const query = { email: email }
+                // console.log(query)
+                const result = (await todosCollections.find(query).toArray()).reverse()
+                res.send(result)
+            }
+            catch (err) {
+                res.send(err)
+            }
+        })
+        app.get("/myTodoslist", async (req, res) => {
+            try {
+                const email = req.query.email
+                const query = { email: email }
+                // console.log(query)
+                const result = (await todosCollections.find(query).toArray()).reverse()
+                res.send(result)
+            }
+            catch (err) {
+                res.send(err)
+            }
+        })
 
+        app.post("/login", async (req, res) => {
+            const userInfo = req.body;
+            const query = { email: userInfo.email }
+            console.log(query)
+            const existUser = await usersCollections.findOne(query)
+            if (existUser) {
+                return res.send({ message: "Welcome Back" })
+            }
+            const result = await usersCollections.insertOne(userInfo)
+            res.send(result)
 
+        })
 
+        app.post("/add-todos", async (req, res) => {
+            try {
+                const todos = req.body;
+                const result = await todosCollections.insertOne(todos)
+                res.send(result)
+            }
+            catch (err) {
+                res.send(err)
+            }
+        })
 
+        // delete todos
+        app.delete('/deletetodos/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await todosCollections.deleteOne(query)
+            res.send(result)
+        })
 
-
+        // update task todos
+        app.put('/updatetask/:id', async (req, res) => {
+            const updatedStatus = req.body
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status: updatedStatus.status
+                },
+            };
+            const result = await todosCollections.updateOne(filter, updateDoc)
+            res.send(result)
+        })
 
 
 
